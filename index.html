@@ -4,15 +4,110 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Intel: Sustainability Through the Ages</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link id="bootstrap-css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script>
+    (() => {
+      const bootstrapLtr = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
+      const bootstrapRtl = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css';
+      const rtlLanguages = new Set(['ar', 'fa', 'he', 'ku', 'ps', 'sd', 'ur', 'yi']);
+      const languageCatalog = {
+        en: { label: 'English', script: 'Latin', direction: 'ltr' },
+        es: { label: 'Spanish', script: 'Latin', direction: 'ltr' },
+        fr: { label: 'French', script: 'Latin', direction: 'ltr' },
+        de: { label: 'German', script: 'Latin', direction: 'ltr' },
+        ja: { label: 'Japanese', script: 'Kana/Kanji', direction: 'ltr' },
+        ko: { label: 'Korean', script: 'Hangul', direction: 'ltr' },
+        ar: {
+          label: 'Arabic',
+          script: 'Arabic',
+          direction: 'rtl',
+          forms: [
+            { value: 'ar', label: 'Modern Standard Arabic' },
+            { value: 'ar-x-classical', label: 'Classical Arabic' }
+          ]
+        },
+        he: { label: 'Hebrew', script: 'Hebrew', direction: 'rtl' },
+        fa: { label: 'Persian', script: 'Perso-Arabic', direction: 'rtl' },
+        ur: { label: 'Urdu', script: 'Perso-Arabic', direction: 'rtl' },
+        zh: {
+          label: 'Chinese',
+          script: 'Han',
+          direction: 'ltr',
+          forms: [
+            { value: 'zh-Hans', label: 'Simplified Chinese (简体)' },
+            { value: 'zh-Hant', label: 'Traditional Chinese (繁體)' }
+          ]
+        }
+      };
+
+      function normalizeLanguageTag(languageTag) {
+        if (!languageTag) return 'en';
+        return languageTag.toLowerCase();
+      }
+
+      function getBaseLanguage(languageTag) {
+        return normalizeLanguageTag(languageTag).split('-')[0];
+      }
+
+      function getDirection(languageTag) {
+        const base = getBaseLanguage(languageTag);
+        return rtlLanguages.has(base) ? 'rtl' : 'ltr';
+      }
+
+      function applyLocalization(languageTag) {
+        const root = document.documentElement;
+        const direction = getDirection(languageTag);
+        const bootstrapCss = document.getElementById('bootstrap-css');
+
+        root.setAttribute('lang', languageTag);
+        root.setAttribute('dir', direction);
+
+        if (bootstrapCss) {
+          bootstrapCss.href = direction === 'rtl' ? bootstrapRtl : bootstrapLtr;
+        }
+
+        if (window.localizationState) {
+          window.localizationState.currentLanguage = languageTag;
+          window.localizationState.currentDirection = direction;
+        }
+      }
+
+      const root = document.documentElement;
+      const preferredLanguage = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
+      window.localizationState = {
+        autoLanguage: preferredLanguage,
+        selectedLanguage: preferredLanguage,
+        currentLanguage: preferredLanguage,
+        currentDirection: getDirection(preferredLanguage),
+        languageCatalog,
+        useAuto: true,
+        applyLocalization,
+        getBaseLanguage
+      };
+
+      applyLocalization(preferredLanguage);
+      root.dataset.autoLanguage = preferredLanguage;
+    })();
+  </script>
 </head>
 <body>
 
   <!-- Header / Hero Section -->
   <header class="py-5 bg-light">
     <div class="container">
-      <img src="img/intel-header-logo.svg" alt="Intel Logo" class="mb-4" style="max-width: 150px; height: auto;" />
+      <div class="d-flex justify-content-end mb-3">
+        <button
+          class="btn btn-outline-primary"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#languageOffcanvas"
+          aria-controls="languageOffcanvas"
+        >
+          Language &amp; Layout
+        </button>
+      </div>
+      <img src="img/intel-header-logo.svg" alt="Intel corporate logo in blue" class="mb-4" style="max-width: 150px; height: auto;" />
       <!-- Main Heading -->
       <h1 class="display-4 fw-bold mb-3">
         Sustainability Through the Ages
@@ -27,6 +122,83 @@
     </div>
   </header>
 
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="languageOffcanvas" aria-labelledby="languageOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h2 class="offcanvas-title h5" id="languageOffcanvasLabel">Language accessibility panel</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+          <div class="language-card h-100 p-3 border rounded-3">
+            <p class="small mb-1 fw-semibold">Auto detected language</p>
+            <p id="detected-language-text" class="mb-2 fw-bold">Detecting…</p>
+            <button
+              type="button"
+              id="auto-language-popover"
+              class="btn btn-sm btn-outline-secondary"
+              data-bs-toggle="popover"
+              data-bs-trigger="focus"
+              data-bs-placement="left"
+              title="Auto language details"
+              data-bs-content=""
+            >
+              Compare details
+            </button>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="language-card h-100 p-3 border rounded-3">
+            <p class="small mb-1 fw-semibold">Applied language</p>
+            <p id="applied-language-text" class="mb-2 fw-bold">Auto</p>
+            <button
+              type="button"
+              id="selected-language-popover"
+              class="btn btn-sm btn-outline-secondary"
+              data-bs-toggle="popover"
+              data-bs-trigger="focus"
+              data-bs-placement="left"
+              title="Selected language details"
+              data-bs-content=""
+            >
+              Compare details
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="use-auto-language" checked />
+        <label class="form-check-label" for="use-auto-language">Use auto-detected language and direction</label>
+      </div>
+
+      <div class="mb-3">
+        <label for="language-select" class="form-label">Choose language</label>
+        <select id="language-select" class="form-select" disabled>
+          <option value="en">English</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+          <option value="de">German</option>
+          <option value="ar">Arabic</option>
+          <option value="he">Hebrew</option>
+          <option value="fa">Persian</option>
+          <option value="ur">Urdu</option>
+          <option value="zh">Chinese</option>
+          <option value="ja">Japanese</option>
+          <option value="ko">Korean</option>
+        </select>
+      </div>
+
+      <div id="writing-form-group" class="mb-3 d-none">
+        <label for="writing-form-select" class="form-label">Writing form</label>
+        <select id="writing-form-select" class="form-select"></select>
+        <p class="small text-muted mt-2 mb-0">Some languages include multiple writing conventions for accessibility.</p>
+      </div>
+
+      <button type="button" id="apply-language" class="btn btn-primary w-100">Apply language selection</button>
+    </div>
+  </div>
+
   <!-- Timeline Cards Section -->
   <section class="py-5">
     <div class="container">
@@ -34,7 +206,7 @@
         <!-- Card 1: 1968 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="img/1.jpg" class="card-img-top" alt="Placeholder Image" />
+            <img src="img/1.jpg" class="card-img-top" alt="Founders of Intel during the company launch era in 1968" />
             <div class="card-body">
               <h2 class="card-title fw-bold">1968</h2>
               <h3 class="h5 text-primary">Intel Founded</h3>
@@ -50,7 +222,7 @@
         <!-- Card 2: 1971 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="img/2.jpg" class="card-img-top" alt="Placeholder Image" />
+            <img src="img/2.jpg" class="card-img-top" alt="Historic Intel 4004 microprocessor representing the 1971 milestone" />
             <div class="card-body">
               <h2 class="card-title fw-bold">1971</h2>
               <h3 class="h5 text-primary">First Microprocessor</h3>
@@ -66,7 +238,7 @@
         <!-- Card 3: 1978 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="img/3.jpg" class="card-img-top" alt="Placeholder Image" />
+            <img src="img/3.jpg" class="card-img-top" alt="Intel processor hardware symbolizing the launch of the 8086 architecture" />
             <div class="card-body">
               <h2 class="card-title fw-bold">1978</h2>
               <h3 class="h5 text-primary">8086 Processor</h3>
@@ -81,7 +253,7 @@
         <!-- Card 4: 1985 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="https://placehold.co/250x100" class="card-img-top" alt="Placeholder Image" />
+            <img src="https://placehold.co/250x100" class="card-img-top" alt="Illustration of 1980s personal computing growth after Intel 386" />
             <div class="card-body">
               <h2 class="card-title fw-bold">1985</h2>
               <h3 class="h5 text-primary">386 Processor</h3>
@@ -97,7 +269,7 @@
         <!-- Card 5: 2006 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="https://placehold.co/250x100" class="card-img-top" alt="Placeholder Image" />
+            <img src="https://placehold.co/250x100" class="card-img-top" alt="Environmental-themed image representing Intel greenhouse gas emissions in 2006" />
             <div class="card-body">
               <h2 class="card-title fw-bold">2006</h2>
               <h3 class="h5 text-primary">Peak GHG Emissions</h3>
@@ -114,7 +286,7 @@
         <!-- Card 6: 2020 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="https://placehold.co/250x100" class="card-img-top" alt="Placeholder Image" />
+            <img src="https://placehold.co/250x100" class="card-img-top" alt="Intel sustainability strategy concept image for the 2020 RISE launch" />
             <div class="card-body">
               <h2 class="card-title fw-bold">2020</h2>
               <h3 class="h5 text-primary">RISE Strategy</h3>
@@ -130,7 +302,7 @@
         <!-- Card 7: 2022 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="https://placehold.co/250x100" class="card-img-top" alt="Placeholder Image" />
+            <img src="https://placehold.co/250x100" class="card-img-top" alt="Graphic indicating Intel commitment to net-zero emissions by 2040" />
             <div class="card-body">
               <h2 class="card-title fw-bold">2022</h2>
               <h3 class="h5 text-primary">Net-Zero By 2040</h3>
@@ -146,7 +318,7 @@
         <!-- Card 8: 2023 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="https://placehold.co/250x100" class="card-img-top" alt="Placeholder Image" />
+            <img src="https://placehold.co/250x100" class="card-img-top" alt="Renewable energy themed image showing Intel progress in 2023" />
             <div class="card-body">
               <h2 class="card-title fw-bold">2023</h2>
               <h3 class="h5 text-primary">Renewable Electricity</h3>
@@ -162,7 +334,7 @@
         <!-- Card 9: 2024 -->
         <div class="col-12 col-sm-6 col-lg-4">
           <div class="card h-100 shadow-sm timeline-card">
-            <img src="https://placehold.co/250x100" class="card-img-top" alt="Placeholder Image" />
+            <img src="https://placehold.co/250x100" class="card-img-top" alt="Conference scene symbolizing Intel sustainability summit in 2024" />
             <div class="card-body">
               <h2 class="card-title fw-bold">2024</h2>
               <h3 class="h5 text-primary">Sustainability Summit</h3>
@@ -245,16 +417,18 @@
         <p class="subscription-subtitle mb-4">Enter your email to get sustainability updates and receive a confirmation message.</p>
         <form id="subscribe-form" class="row g-2 align-items-center" novalidate>
           <div class="col-12 col-md-8">
-            <label for="email" class="visually-hidden">Email address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              class="form-control form-control-lg"
-              placeholder="name@example.com"
-              required
-              autocomplete="email"
-            />
+            <div class="form-floating">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control form-control-lg"
+                placeholder="name@example.com"
+                required
+                autocomplete="email"
+              />
+              <label for="email">Email address</label>
+            </div>
           </div>
           <div class="col-12 col-md-4 d-grid">
             <button type="submit" class="btn btn-primary btn-lg">Subscribe</button>
@@ -269,6 +443,115 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    const localization = window.localizationState;
+    const languageCatalog = localization.languageCatalog;
+    const languageSelect = document.getElementById('language-select');
+    const writingFormGroup = document.getElementById('writing-form-group');
+    const writingFormSelect = document.getElementById('writing-form-select');
+    const useAutoLanguage = document.getElementById('use-auto-language');
+    const applyLanguageButton = document.getElementById('apply-language');
+    const detectedLanguageText = document.getElementById('detected-language-text');
+    const appliedLanguageText = document.getElementById('applied-language-text');
+    const autoPopoverButton = document.getElementById('auto-language-popover');
+    const selectedPopoverButton = document.getElementById('selected-language-popover');
+
+    function formatLanguage(languageTag) {
+      const base = localization.getBaseLanguage(languageTag);
+      const languageInfo = languageCatalog[base] || { label: base.toUpperCase(), script: 'Unknown', direction: 'ltr' };
+      return {
+        label: languageInfo.label,
+        script: languageInfo.script,
+        direction: languageInfo.direction,
+        languageTag
+      };
+    }
+
+    function getSelectedLanguageTag() {
+      const selectedBase = languageSelect.value;
+      const languageInfo = languageCatalog[selectedBase];
+
+      if (languageInfo && Array.isArray(languageInfo.forms) && languageInfo.forms.length > 0) {
+        return writingFormSelect.value || languageInfo.forms[0].value;
+      }
+
+      return selectedBase;
+    }
+
+    function updateWritingForms() {
+      const selectedBase = languageSelect.value;
+      const languageInfo = languageCatalog[selectedBase];
+      const hasForms = Boolean(languageInfo && Array.isArray(languageInfo.forms) && languageInfo.forms.length > 0);
+
+      writingFormSelect.innerHTML = '';
+
+      if (!hasForms) {
+        writingFormGroup.classList.add('d-none');
+        return;
+      }
+
+      languageInfo.forms.forEach((formOption) => {
+        const option = document.createElement('option');
+        option.value = formOption.value;
+        option.textContent = formOption.label;
+        writingFormSelect.appendChild(option);
+      });
+
+      writingFormGroup.classList.remove('d-none');
+    }
+
+    function updateLanguagePanelText() {
+      const autoInfo = formatLanguage(localization.autoLanguage);
+      const selectedTag = useAutoLanguage.checked ? localization.autoLanguage : getSelectedLanguageTag();
+      const selectedInfo = formatLanguage(selectedTag);
+
+      detectedLanguageText.textContent = `${autoInfo.label} (${localization.autoLanguage}) · ${autoInfo.direction.toUpperCase()}`;
+      appliedLanguageText.textContent = `${selectedInfo.label} (${selectedTag}) · ${selectedInfo.direction.toUpperCase()}`;
+
+      autoPopoverButton.setAttribute(
+        'data-bs-content',
+        `Auto language: ${autoInfo.label} (${localization.autoLanguage}). Script: ${autoInfo.script}. Layout direction: ${autoInfo.direction.toUpperCase()}.`
+      );
+      selectedPopoverButton.setAttribute(
+        'data-bs-content',
+        `Applied language: ${selectedInfo.label} (${selectedTag}). Script: ${selectedInfo.script}. Layout direction: ${selectedInfo.direction.toUpperCase()}.`
+      );
+    }
+
+    function applyLanguagePreference() {
+      const nextLanguage = useAutoLanguage.checked ? localization.autoLanguage : getSelectedLanguageTag();
+      localization.selectedLanguage = nextLanguage;
+      localization.useAuto = useAutoLanguage.checked;
+      localization.applyLocalization(nextLanguage);
+      updateLanguagePanelText();
+    }
+
+    languageSelect.value = localization.getBaseLanguage(localization.autoLanguage);
+    updateWritingForms();
+    updateLanguagePanelText();
+
+    useAutoLanguage.addEventListener('change', () => {
+      const manualMode = !useAutoLanguage.checked;
+      languageSelect.disabled = !manualMode;
+      writingFormSelect.disabled = !manualMode;
+      if (!manualMode) {
+        applyLanguagePreference();
+      } else {
+        updateLanguagePanelText();
+      }
+    });
+
+    languageSelect.addEventListener('change', () => {
+      updateWritingForms();
+      updateLanguagePanelText();
+    });
+
+    writingFormSelect.addEventListener('change', updateLanguagePanelText);
+    applyLanguageButton.addEventListener('click', applyLanguagePreference);
+
+    document.querySelectorAll('[data-bs-toggle="popover"]').forEach((popoverTriggerEl) => {
+      new bootstrap.Popover(popoverTriggerEl);
+    });
+
     const form = document.getElementById('subscribe-form');
     const emailInput = document.getElementById('email');
     const statusElement = document.getElementById('subscribe-status');
