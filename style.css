@@ -20,6 +20,28 @@ body {
   color: #1f2933;
 }
 
+html[data-language-base="ar"] body,
+html[data-language-base="fa"] body,
+html[data-language-base="ur"] body {
+  font-family: 'Noto Naskh Arabic', 'Geeza Pro', 'Tahoma', 'Arial', sans-serif;
+}
+
+html[data-language-base="he"] body {
+  font-family: 'Noto Sans Hebrew', 'Arial Hebrew', 'Segoe UI', sans-serif;
+}
+
+html[data-language-base="zh"] body {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Heiti SC', sans-serif;
+}
+
+html[data-language-base="ja"] body {
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', sans-serif;
+}
+
+html[data-language-base="ko"] body {
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+
 /* ========================================
    Typography - Responsive
    ======================================== */
@@ -174,6 +196,10 @@ header .text-muted {
 
 .language-card {
   background-color: #f8f9fa;
+}
+
+.story-sequence-section {
+  background-color: #e9ecef;
 }
 
 .btn {
