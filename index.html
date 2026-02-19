@@ -685,6 +685,8 @@
     const emailInput = document.getElementById('email');
     const statusElement = document.getElementById('subscribe-status');
 
+    const isGitHubPagesHost = window.location.hostname.endsWith('github.io');
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
@@ -696,6 +698,13 @@
       }
 
       const submitButton = form.querySelector('button[type="submit"]');
+
+      if (isGitHubPagesHost) {
+        statusElement.textContent = 'Live GitHub Pages hosting is static, so email confirmation is unavailable here. Run the Node server locally to test subscription email delivery.';
+        statusElement.className = 'subscription-status text-warning mb-0';
+        return;
+      }
+
       submitButton.disabled = true;
       statusElement.textContent = 'Sending confirmation email...';
       statusElement.className = 'subscription-status text-info mb-0';

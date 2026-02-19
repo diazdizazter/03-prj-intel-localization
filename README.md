@@ -35,3 +35,12 @@ You'll modify the layout, integrate Bootstrap, and add a subscription form to en
 - The page includes a subscription form at the bottom.
 - Submitting the form sends a POST request to `/api/subscribe`.
 - The server sends a confirmation email to the entered address using SMTP settings from environment variables.
+
+## GitHub Pages
+
+- This repository is configured to deploy on every push to `main` using GitHub Actions.
+- Expected live URL:
+
+	https://gca-classroom.github.io/03-prj-intel-localization/
+
+- Note: GitHub Pages is static hosting, so `/api/subscribe` (email sending) is not available there.
